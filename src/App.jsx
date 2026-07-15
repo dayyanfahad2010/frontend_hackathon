@@ -11,7 +11,7 @@ import { ProtectedRoute, RoleRoute, PublicOnlyRoute } from "@/components/layout/
 import Landing from "@/pages/misc/Landing";
 import NotFound from "@/pages/misc/NotFound";
 import Login from "@/pages/auth/Login";
-import Signup from "@/pages/auth/Signup";
+import Signup from "@/pages/auth/SignUp.jsx";
 import ForgotPassword from "@/pages/auth/ForgotPassword";
 import ResetPassword from "@/pages/auth/ResetPassword";
 import Dashboard from "@/pages/dashboard/Dashboard";
