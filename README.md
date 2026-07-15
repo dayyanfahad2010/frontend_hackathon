@@ -1,61 +1,157 @@
-# MaintainIQ — Frontend
+# 🚀 MaintainIQ Frontend
 
-React + Redux Toolkit frontend for the MaintainIQ hackathon backend: AI-powered QR maintenance and asset history platform.
+Frontend for **MaintainIQ – AI-Powered QR Maintenance & Asset History Platform** built with React.js and Tailwind CSS.
 
-## Stack
+🌐 Live Demo
 
-- **React 19 + Vite**
-- **Tailwind CSS v4** — custom industrial "asset tag" design system, dark/light theme
-- **Redux Toolkit + redux-persist** — all API calls go through slices/thunks; theme + session hint persisted to localStorage
-- **React Router v7** — protected routes, role-based routes, public (no-login) QR scan routes
-- **react-hook-form**, **axios** (cookie-based auth), **qrcode.react**, **lucide-react**, **react-hot-toast**
+https://hackathon-frontend-steel-six-blush.vercel.app/
 
-## Getting started
+---
+
+## 📖 About
+
+MaintainIQ is a modern maintenance management platform where every asset receives a QR Code. Users can report maintenance issues, AI assists with issue triage, administrators assign technicians, and technicians complete maintenance while maintaining a permanent service history.
+
+---
+
+## ✨ Features
+
+- Beautiful Responsive UI
+- JWT Authentication
+- Admin Dashboard
+- Technician Dashboard
+- Asset Management
+- QR Code Preview
+- Public Asset Page
+- Issue Reporting
+- AI Issue Triage
+- Maintenance History
+- Dashboard Analytics
+- Search & Filters
+- Dark Modern Interface
+
+---
+
+## 🛠 Tech Stack
+
+- React.js
+- React Router
+- Redux Toolkit
+- Axios
+- Tailwind CSS
+- React Hot Toast
+- React Hook Form
+- QR Code Library
+- Lucide Icons
+
+---
+
+## 📂 Folder Structure
+
+```
+src/
+│
+├── components/
+├── pages/
+├── layouts/
+├── redux/
+├── services/
+├── hooks/
+├── utils/
+└── assets/
+```
+
+---
+
+## 👥 User Roles
+
+### Admin
+
+- Manage Assets
+- Assign Technician
+- Manage Users
+- Dashboard Analytics
+
+### Technician
+
+- View Assigned Issues
+- Add Maintenance Notes
+- Resolve Issues
+
+### Public User
+
+- Scan QR Code
+- Report Maintenance Issue
+
+---
+
+## 🚀 Installation
 
 ```bash
+git clone https://github.com/dayyanfahad2010/frontend_hackathon.git
+
+cd frontend_hackathon
+
 npm install
-cp .env.example .env   # set VITE_API_URL to your backend, e.g. http://localhost:8000
+```
+
+---
+
+## ⚙ Environment Variables
+
+```env
+VITE_API_URL=
+```
+
+---
+
+## ▶ Running Project
+
+```bash
 npm run dev
 ```
 
-The backend already whitelists `http://localhost:5173` in CORS, so run the frontend on the default Vite port for local dev.
+Production Build
 
-## How auth works
+```bash
+npm run build
+```
 
-The backend issues an **httpOnly cookie** on login/signup, so the frontend never touches the JWT directly. `axiosClient` sends every request with `withCredentials: true`. On app load, `AuthBootstrap` calls `GET /api/auth/profile` to verify the session and populate Redux — this is what `ProtectedRoute` waits on before deciding whether to redirect to `/login`.
+---
 
-Only `auth` (user + session flag) and `ui` (theme) are persisted to localStorage; everything else (assets, issues, dashboard, history) is re-fetched from the API on each visit so it never goes stale in storage.
+## 🌐 Live Demo
 
-## Route map
+https://hackathon-frontend-steel-six-blush.vercel.app/
 
-| Path | Access |
-|---|---|
-| `/` | Public landing page |
-| `/scan/:assetCode` | Public — QR destination, view asset + report an issue |
-| `/login`, `/signup`, `/forgot-password`, `/reset-password` | Public-only (redirects if already logged in) |
-| `/app/dashboard` | Protected — role-aware (admin vs technician summary) |
-| `/app/assets`, `/app/assets/:id` | Protected — both roles view; only admin can create/edit/retire |
-| `/app/issues` | Protected — admin only |
-| `/app/my-issues` | Protected — technician only |
-| `/app/issues/:id` | Protected — both roles |
+---
 
-## Backend fixes applied
+## 🔗 Backend Repository
 
-While wiring this frontend up, a handful of real backend bugs were found and fixed directly in the backend repo (see its `README.md` for the full list) — most importantly:
+https://github.com/dayyanfahad2010/Hackathon_Project_Backend
 
-- Sign-up now actually saves a user's `role` (it was silently dropped before).
-- The admin "all issues" endpoint no longer collapses to "my issues" due to a `"Admin"` vs `"admin"` casing mismatch.
-- A missing `GROQ_API_KEY` no longer crashes the whole server — AI endpoints now fail gracefully with a `503`.
-- `POST /api/ai/triage` is now public, matching the product spec's unauthenticated QR-scan report flow.
-- Added `GET /api/users?role=technician` (admin-only), so this frontend can offer a real technician dropdown instead of asking for a raw MongoDB `_id`.
-- Auth cookies now use `secure`/`sameSite` conditional on `NODE_ENV`, so login actually persists over plain `http://localhost` in local dev.
-- **`createHistory` was called but never imported** in three controllers — reporting an issue, assigning a technician, changing status, and logging maintenance were all silently crashing with a 500 before this fix. This was the most important one.
-- **Evidence upload is now fully wired end-to-end.** The public issue-report form and the technician's maintenance form both have a real photo/video picker (`EvidencePicker`) that uploads through `multer` → Cloudinary on the backend.
+---
 
-With those fixes in place, everything below just works — no more manual IDs, no more silent 500s, and photos actually attach to issues and maintenance records.
+## 📸 Screenshots
 
-## Notable frontend decisions
+Add screenshots of:
 
-- **QR codes are generated client-side** (`qrcode.react`) from `${origin}/scan/{assetCode}` — the backend doesn't generate a QR image, so on asset creation the frontend sends that URL as `publicUrl`/`qrCode` and renders the QR from it everywhere.
-- **"Report on behalf of a walk-in"**: the Asset Detail page links to the same public `/scan/:assetCode` report form. If a staff member is logged in, their session cookie carries over, so AI triage still works even though it's the "public" page.
-- **Maintenance record creation resolves the issue** (per the backend's own logic), so the status dropdown on Issue Detail intentionally excludes "Resolved" — that transition only happens by logging a maintenance record.
+- Login
+- Dashboard
+- Assets
+- QR Code
+- Issue Reporting
+- AI Issue Triage
+- Maintenance
+- Asset History
+
+---
+
+## 👨‍💻 Author
+
+**Dayyan Fahad**
+
+GitHub:
+https://github.com/dayyanfahad2010
+
+LinkedIn:
+https://www.linkedin.com/in/dayyan-fahad/
