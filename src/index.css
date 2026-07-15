@@ -1,119 +1,100 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap');
 @import "tailwindcss";
 
-/* Tailwind v4: design tokens defined in CSS via @theme.
-   This generates utility classes automatically — e.g. --color-primary-500
-   gives you bg-primary-500, text-primary-500, border-primary-500, etc.
-   No tailwind.config.js changes needed for these. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
-  --color-ink: #101828;
-  --color-ink-soft: #1D2939;
+  --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
-  --color-slate: #475467;
-  --color-slate-light: #667085;
+  /* Light palette */
+  --color-paper: #F5F6F4;
+  --color-surface: #FFFFFF;
+  --color-surface-2: #EFF1ED;
+  --color-ink: #10151B;
+  --color-ink-soft: #4B5560;
+  --color-line: #E1E4E1;
 
-  --color-primary-50: #EBF6F6;
-  --color-primary-100: #D2EAEB;
-  --color-primary-400: #12898F;
-  --color-primary-500: #0F6B72;
-  --color-primary-600: #0B4F54;
-  --color-primary-700: #083A3E;
+  /* Brand */
+  --color-graphite: #10151B;
+  --color-graphite-2: #1B2430;
+  --color-amber: #F2A93B;
+  --color-amber-ink: #6B4708;
+  --color-good: #2E8B57;
+  --color-warn: #DB8A1F;
+  --color-critical: #D64545;
+  --color-info: #3B7DD8;
 
-  --color-amber-50: #FFFAEB;
-  --color-amber-400: #FDB022;
-  --color-amber-500: #F79009;
-  --color-amber-600: #B54708;
-
-  --color-success-50: #ECFDF3;
-  --color-success-400: #32D583;
-  --color-success-500: #12B76A;
-  --color-success-600: #027A48;
-
-  --color-danger-50: #FEF3F2;
-  --color-danger-400: #F97066;
-  --color-danger-500: #F04438;
-  --color-danger-600: #B42318;
-
-  --color-info-50: #EFF8FF;
-  --color-info-500: #2E90FA;
-  --color-info-600: #175CD3;
-
-  --color-line: #E4E7EC;
-  --color-bg: #F9FAFB;
-
-  --font-display: 'Space Grotesk', sans-serif;
-  --font-body: 'Inter', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
-
-  --radius-xl2: 0.875rem;
-
-  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.05);
-  --shadow-popover: 0 4px 6px -2px rgba(16, 24, 40, 0.03), 0 12px 16px -4px rgba(16, 24, 40, 0.08);
+  --radius-tag: 3px;
+  --shadow-tag: 0 1px 2px rgba(16,21,27,0.06), 0 1px 1px rgba(16,21,27,0.04);
 }
 
-@layer base {
-  html {
-    font-family: var(--font-body);
-  }
-  body {
-    @apply bg-bg text-ink antialiased;
-  }
-  h1, h2, h3, h4, h5 {
-    font-family: var(--font-display);
-  }
-  ::selection {
-    @apply bg-primary-100 text-primary-700;
-  }
-  *:focus-visible {
-    outline: 2px solid #0F6B72;
-    outline-offset: 2px;
-  }
+.dark {
+  --color-paper: #0A0D11;
+  --color-surface: #12161C;
+  --color-surface-2: #171C23;
+  --color-ink: #E9ECEE;
+  --color-ink-soft: #97A1AB;
+  --color-line: #232A33;
 }
 
-@layer components {
-  /* Asset-code "viewfinder" frame — the signature detail.
-     Corner brackets around monospace asset codes / QR references. */
-  .code-frame {
-    @apply relative inline-flex items-center px-3 py-1.5 font-mono text-sm tracking-wide text-primary-600 bg-primary-50 rounded;
-  }
-  .code-frame::before,
-  .code-frame::after {
-    content: '';
-    position: absolute;
-    width: 6px;
-    height: 6px;
-    border-color: #0F6B72;
-  }
-  .code-frame::before {
-    top: -1px;
-    left: -1px;
-    border-top: 2px solid;
-    border-left: 2px solid;
-  }
-  .code-frame::after {
-    bottom: -1px;
-    right: -1px;
-    border-bottom: 2px solid;
-    border-right: 2px solid;
-  }
-
-  .scrollbar-thin::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  .scrollbar-thin::-webkit-scrollbar-thumb {
-    @apply bg-line rounded-full;
-  }
+html {
+  font-family: var(--font-body);
 }
 
-@keyframes toast-in {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+body {
+  background-color: var(--color-paper);
+  color: var(--color-ink);
 }
-.animate-toast-in {
-  animation: toast-in 0.2s ease-out;
+
+::selection {
+  background-color: var(--color-amber);
+  color: var(--color-graphite);
 }
+
+/* Asset-tag signature: perforation edge */
+.tag-perforation {
+  background-image: radial-gradient(circle, var(--color-line) 1px, transparent 1.5px);
+  background-size: 10px 2px;
+  background-repeat: repeat-x;
+  background-position: top left;
+  height: 1px;
+}
+
+.corner-bracket {
+  position: relative;
+}
+.corner-bracket::before,
+.corner-bracket::after {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-color: var(--color-amber);
+  opacity: 0.9;
+}
+.corner-bracket::before {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid var(--color-amber);
+  border-left: 2px solid var(--color-amber);
+}
+.corner-bracket::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 2px solid var(--color-amber);
+  border-right: 2px solid var(--color-amber);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-line); border-radius: 8px; }
 
 @media (prefers-reduced-motion: reduce) {
-  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }

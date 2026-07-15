@@ -1,48 +1,113 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink } from "react-router-dom";
 import {
-  LayoutGrid, Boxes, Wrench, ClipboardList, History, Settings,
-} from 'lucide-react';
+  LayoutDashboard,
+  Boxes,
+  Wrench,
+  ClipboardList,
+  X,
+} from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import { closeSidebar } from "@/features/ui/uiSlice";
+import { cn } from "@/utils/cn";
 
-const ADMIN_LINKS = [
-  { to: '/admin', label: 'Dashboard', icon: LayoutGrid, end: true },
-  { to: '/admin/assets', label: 'Assets', icon: Boxes },
-  { to: '/admin/issues', label: 'Issues', icon: ClipboardList },
-  { to: '/admin/history', label: 'Activity History', icon: History },
-  { to: '/admin/settings', label: 'Settings', icon: Settings },
-];
+const NAV = {
+  admin: [
+    { to: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { to: "/app/assets", label: "Assets", icon: Boxes },
+    { to: "/app/issues", label: "Issues", icon: Wrench },
+  ],
+  technician: [
+    { to: "/app/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { to: "/app/assets", label: "Assets", icon: Boxes },
+    { to: "/app/my-issues", label: "My Issues", icon: ClipboardList },
+  ],
+};
 
-const TECH_LINKS = [
-  { to: '/technician', label: 'My Work', icon: Wrench, end: true },
-  { to: '/technician/history', label: 'History', icon: History },
-];
+function NavItem({ to, label, icon: Icon, onClick }) {
+  return (
+    <NavLink
+      to={to}
+      onClick={onClick}
+      className={({ isActive }) =>
+        cn(
+          "flex items-center gap-3 rounded-[var(--radius-tag)] px-3 py-2.5 text-sm font-medium transition-colors",
+          isActive
+            ? "bg-[var(--color-amber)] text-[var(--color-graphite)]"
+            : "text-[var(--color-ink-soft)] hover:bg-[var(--color-surface-2)] hover:text-[var(--color-ink)]"
+        )
+      }
+    >
+      <Icon className="size-4.5 shrink-0" />
+      {label}
+    </NavLink>
+  );
+}
 
-export default function Sidebar({ role = 'admin' }) {
-  const links = role === 'admin' ? ADMIN_LINKS : TECH_LINKS;
+function SidebarContent({ onNavigate }) {
+  const role = useSelector((s) => s.auth.user?.role) || "technician";
+  const items = NAV[role] || NAV.technician;
 
   return (
-    <aside className="w-60 border-r border-line bg-white flex-shrink-0 hidden md:flex flex-col py-4">
-      <nav className="flex-1 px-3 space-y-1">
-        {links.map(({ to, label, icon: Icon, end }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={end}
-            className={({ isActive }) =>
-              `flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-              ${isActive ? 'bg-primary-50 text-primary-600' : 'text-slate hover:bg-gray-50 hover:text-ink'}`
-            }
-          >
-            <Icon className="w-4.5 h-4.5" />
-            {label}
-          </NavLink>
-        ))}
-      </nav>
-      <div className="px-3 pt-3 mt-3 border-t border-line">
-        <div className="rounded-lg bg-primary-50 p-3">
-          <p className="text-xs font-medium text-primary-600">Next service due</p>
-          <p className="text-xs text-slate mt-1">3 assets need attention this week</p>
+    <div className="flex h-full flex-col">
+      <div className="flex items-center gap-2.5 px-4 py-5">
+        <div className="flex size-9 items-center justify-center rounded-md bg-[var(--color-graphite)] font-[var(--font-display)] text-sm font-bold text-[var(--color-amber)] dark:bg-[var(--color-amber)] dark:text-[var(--color-graphite)]">
+          IQ
+        </div>
+        <div>
+          <p className="font-[var(--font-display)] text-base font-bold leading-tight text-[var(--color-ink)]">
+            MaintainIQ
+          </p>
+          <p className="text-[10px] uppercase tracking-widest text-[var(--color-ink-soft)]">
+            Asset Manifest
+          </p>
         </div>
       </div>
-    </aside>
+
+      <div className="tag-perforation mx-4" />
+
+      <nav className="flex-1 space-y-1 px-3 py-4">
+        {items.map((item) => (
+          <NavItem key={item.to} {...item} onClick={onNavigate} />
+        ))}
+      </nav>
+
+      <div className="mx-4 mb-4 rounded-md border border-dashed border-[var(--color-line)] p-3 font-[var(--font-mono)] text-[10px] text-[var(--color-ink-soft)]">
+        Role: <span className="text-[var(--color-amber-ink)] dark:text-[var(--color-amber)] font-semibold uppercase">{role}</span>
+      </div>
+    </div>
+  );
+}
+
+export default function Sidebar() {
+  const sidebarOpen = useSelector((s) => s.ui.sidebarOpen);
+  const dispatch = useDispatch();
+
+  return (
+    <>
+      {/* Desktop */}
+      <aside className="hidden lg:flex lg:w-64 lg:shrink-0 lg:flex-col lg:border-r lg:border-[var(--color-line)] lg:bg-[var(--color-surface)]">
+        <SidebarContent />
+      </aside>
+
+      {/* Mobile drawer */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-40 lg:hidden">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => dispatch(closeSidebar())}
+          />
+          <div className="relative flex h-full w-72 flex-col bg-[var(--color-surface)] shadow-xl">
+            <button
+              onClick={() => dispatch(closeSidebar())}
+              className="absolute right-3 top-4 rounded-full p-1.5 text-[var(--color-ink-soft)] hover:bg-[var(--color-surface-2)]"
+              aria-label="Close menu"
+            >
+              <X className="size-4" />
+            </button>
+            <SidebarContent onNavigate={() => dispatch(closeSidebar())} />
+          </div>
+        </div>
+      )}
+    </>
   );
 }

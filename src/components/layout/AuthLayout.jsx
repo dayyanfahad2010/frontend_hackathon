@@ -1,50 +1,79 @@
-import { Outlet } from 'react-router-dom';
-import { QrCode, History, ClipboardCheck } from 'lucide-react';
+import { Outlet } from "react-router-dom";
+import { QrCode, ScanLine, ClipboardCheck, History } from "lucide-react";
+import ThemeToggle from "@/components/common/ThemeToggle";
 
-const POINTS = [
-  { icon: QrCode, text: 'Give every asset a digital identity and QR-accessible page' },
-  { icon: ClipboardCheck, text: 'Triage and assign issues with AI-assisted structuring' },
-  { icon: History, text: 'Keep a permanent, accountable maintenance history' },
+const STEPS = [
+  { icon: ScanLine, label: "Scan the asset tag" },
+  { icon: ClipboardCheck, label: "AI triages the report" },
+  { icon: QrCode, label: "Technician resolves it" },
+  { icon: History, label: "History stays permanent" },
 ];
 
 export default function AuthLayout() {
   return (
-    <div className="min-h-screen grid lg:grid-cols-2 bg-white">
-      {/* Left: brand panel */}
-      <div className="hidden lg:flex flex-col justify-between bg-primary-600 text-white p-10 relative overflow-hidden">
-        <div className="absolute -right-24 -top-24 w-72 h-72 rounded-full bg-primary-500/30" />
-        <div className="absolute -left-16 bottom-0 w-56 h-56 rounded-full bg-primary-700/40" />
-
-        <div className="relative flex items-center gap-2">
-          <div className="w-9 h-9 rounded-lg bg-white/15 flex items-center justify-center">
-            <span className="font-display font-bold">M</span>
+    <div className="grid min-h-screen lg:grid-cols-2">
+      <div className="relative hidden flex-col justify-between overflow-hidden bg-[var(--color-graphite)] p-10 text-white lg:flex">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.07]"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle, #F2A93B 1px, transparent 1px)",
+            backgroundSize: "22px 22px",
+          }}
+        />
+        <div className="relative flex items-center gap-2.5">
+          <div className="flex size-9 items-center justify-center rounded-md bg-[var(--color-amber)] font-[var(--font-display)] text-sm font-bold text-[var(--color-graphite)]">
+            IQ
           </div>
-          <span className="font-display font-semibold text-lg">MaintainIQ</span>
+          <span className="font-[var(--font-display)] text-lg font-bold">MaintainIQ</span>
         </div>
 
         <div className="relative">
-          <h1 className="font-display text-3xl font-semibold leading-tight mb-6">
-            Scan. Report.<br />Diagnose. Maintain.
-          </h1>
-          <div className="space-y-4">
-            {POINTS.map(({ icon: Icon, text }, i) => (
-              <div key={i} className="flex items-start gap-3">
-                <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center flex-shrink-0">
-                  <Icon className="w-4 h-4" />
-                </div>
-                <p className="text-sm text-primary-50 pt-1.5">{text}</p>
-              </div>
+          <p className="font-[var(--font-mono)] text-xs uppercase tracking-[0.25em] text-[var(--color-amber)]">
+            Asset Lifecycle Manifest
+          </p>
+          <h2 className="mt-3 max-w-md font-[var(--font-display)] text-4xl font-bold leading-tight">
+            Scan. Report. Diagnose. Maintain.
+          </h2>
+          <p className="mt-4 max-w-sm text-sm text-white/70">
+            Every asset gets a digital identity, a QR-accessible page, and a
+            permanent service history — from first report to final repair.
+          </p>
+
+          <ul className="mt-8 space-y-3">
+            {STEPS.map(({ icon: Icon, label }, i) => (
+              <li key={label} className="flex items-center gap-3 text-sm text-white/85">
+                <span className="flex size-7 shrink-0 items-center justify-center rounded border border-white/15 bg-white/5 font-[var(--font-mono)] text-[11px] text-[var(--color-amber)]">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <Icon className="size-4 text-[var(--color-amber)]" />
+                {label}
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
 
-        <p className="relative text-xs text-primary-100">AI-Powered QR Maintenance & Asset History Platform</p>
+        <p className="relative font-[var(--font-mono)] text-[11px] text-white/40">
+          MaintainIQ · SMIT Final Hackathon Build
+        </p>
       </div>
 
-      {/* Right: form panel */}
-      <div className="flex items-center justify-center p-6 sm:p-10">
-        <div className="w-full max-w-sm">
-          <Outlet />
+      <div className="flex flex-col">
+        <div className="flex justify-between items-center px-6 py-5 lg:justify-end">
+          <div className="flex items-center gap-2 lg:hidden">
+            <div className="flex size-8 items-center justify-center rounded-md bg-[var(--color-graphite)] font-[var(--font-display)] text-xs font-bold text-[var(--color-amber)] dark:bg-[var(--color-amber)] dark:text-[var(--color-graphite)]">
+              IQ
+            </div>
+            <span className="font-[var(--font-display)] font-bold text-[var(--color-ink)]">
+              MaintainIQ
+            </span>
+          </div>
+          <ThemeToggle />
+        </div>
+        <div className="flex flex-1 items-center justify-center px-6 pb-10">
+          <div className="w-full max-w-sm">
+            <Outlet />
+          </div>
         </div>
       </div>
     </div>

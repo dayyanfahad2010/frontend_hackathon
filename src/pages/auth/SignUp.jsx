@@ -1,73 +1,124 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { User, Mail, Lock, Building2 } from 'lucide-react';
-import Input from '../../components/ui/Input';
-import Select from '../../components/ui/Select';
-import Button from '../../components/ui/Button';
-import { signup } from '../../redux/features/auth/authThunk';
-import { clearAuthState } from '../../redux/features/auth/authSlice';
-import { useToast } from '../../components/ui/Toast';
+import { useForm } from "react-hook-form";
+import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { UserPlus } from "lucide-react";
+import toast from "react-hot-toast";
+import { signUp, clearAuthError } from "@/features/auth/authSlice";
+import Button from "@/components/common/Button";
+import { FormField, Input, Select } from "@/components/common/Field";
 
-export default function SignUp() {
-  const [form, setForm] = useState({ userName: '', email: '', organization: '', role: '', password: '' });
-  const [errors, setErrors] = useState({});
+export default function Signup() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { loading } = useSelector((state) => state.auth);
+  const status = useSelector((s) => s.auth.status);
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm();
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
-
-  const validate = () => {
-    const err = {};
-    if (!form.userName) err.name = 'Full name is required';
-    if (!form.email) err.email = 'Email is required';
-    if (!form.role) err.role = 'Select your role';
-    if (!form.password || form.password.length < 6) err.password = 'Minimum 6 characters';
-    setErrors(err);
-    return Object.keys(err).length === 0;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validate()) return;
-    dispatch(clearAuthState());
-    const result = await dispatch(signup(form));
-    if (signup.fulfilled.match(result)) {
-      toast(result.payload?.message || 'Account created successfully', 'success');
-      const role = result.payload?.data?.role;
-      navigate(role === 'technician' ? '/technician' : '/admin');
+  const onSubmit = async (values) => {
+    dispatch(clearAuthError());
+    const result = await dispatch(signUp(values));
+    if (signUp.fulfilled.match(result)) {
+      toast.success("Account created — log in to continue");
+      navigate("/login");
     } else {
-      toast(result.payload?.message || 'Sign up failed. Please try again.', 'error');
+      toast.error(result.payload || "Sign up failed");
     }
   };
 
   return (
     <div>
-      <h2 className="font-display text-2xl font-semibold text-ink mb-1">Create your account</h2>
-      <p className="text-sm text-slate mb-8">Set up MaintainIQ for your organization.</p>
+      <p className="font-[var(--font-mono)] text-xs uppercase tracking-[0.25em] text-[var(--color-amber-ink)] dark:text-[var(--color-amber)]">
+        Get started
+      </p>
+      <h1 className="mt-2 font-[var(--font-display)] text-2xl font-bold text-[var(--color-ink)]">
+        Create your account
+      </h1>
+      <p className="mt-1.5 text-sm text-[var(--color-ink-soft)]">
+        Register as an administrator or technician to manage assets.
+      </p>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <Input label="Full name" name="userName" icon={User} placeholder="Ayesha Khan" required
-          value={form.userName} onChange={handleChange} error={errors.name} />
-        <Input label="Email address" name="email" type="email" icon={Mail} placeholder="you@organization.com" required
-          value={form.email} onChange={handleChange} error={errors.email} />
-        <Input label="Organization" name="organization" icon={Building2} placeholder="Riverside Hospital"
-          value={form.organization} onChange={handleChange} />
-        <Select
-          label="Your role" name="role" required
-          options={[{ value: 'admin', label: 'Administrator' }, { value: 'technician', label: 'Technician' }, { value: 'supervisor', label: 'Supervisor' }]}
-          value={form.role} onChange={handleChange} error={errors.role}
-        />
-        <Input label="Password" name="password" type="password" icon={Lock} placeholder="At least 6 characters" required
-          value={form.password} onChange={handleChange} error={errors.password} />
+      <form onSubmit={handleSubmit(onSubmit)} className="mt-7 space-y-4">
+        <FormField label="Full name" htmlFor="userName" required error={errors.userName?.message}>
+          <Input
+            id="userName"
+            placeholder="Ayesha Khan"
+            autoComplete="name"
+            error={!!errors.userName}
+            {...register("userName", { required: "Name is required" })}
+          />
+        </FormField>
 
-        <Button type="submit" fullWidth loading={loading}>Create account</Button>
+        <FormField label="Email" htmlFor="email" required error={errors.email?.message}>
+          <Input
+            id="email"
+            type="email"
+            placeholder="you@organization.com"
+            autoComplete="email"
+            error={!!errors.email}
+            {...register("email", { required: "Email is required" })}
+          />
+        </FormField>
+
+        <FormField label="Role" htmlFor="role" hint="Determines what you can see and manage.">
+          <Select id="role" defaultValue="technician" {...register("role")}>
+            <option value="technician">Technician</option>
+            <option value="admin">Administrator</option>
+          </Select>
+        </FormField>
+
+        <FormField
+          label="Password"
+          htmlFor="password"
+          required
+          error={errors.password?.message}
+          hint="At least 8 characters."
+        >
+          <Input
+            id="password"
+            type="password"
+            placeholder="••••••••"
+            autoComplete="new-password"
+            error={!!errors.password}
+            {...register("password", {
+              required: "Password is required",
+              minLength: { value: 8, message: "Must be at least 8 characters" },
+            })}
+          />
+        </FormField>
+
+        <FormField
+          label="Confirm password"
+          htmlFor="confirmPassword"
+          required
+          error={errors.confirmPassword?.message}
+        >
+          <Input
+            id="confirmPassword"
+            type="password"
+            placeholder="••••••••"
+            autoComplete="new-password"
+            error={!!errors.confirmPassword}
+            {...register("confirmPassword", {
+              required: "Please confirm your password",
+              validate: (v) => v === watch("password") || "Passwords do not match",
+            })}
+          />
+        </FormField>
+
+        <Button type="submit" className="w-full" icon={UserPlus} loading={status === "loading"}>
+          Create account
+        </Button>
       </form>
 
-      <p className="text-sm text-slate text-center mt-6">
-        Already have an account? <Link to="/login" className="font-medium text-primary-500 hover:text-primary-600">Log in</Link>
+      <p className="mt-6 text-center text-sm text-[var(--color-ink-soft)]">
+        Already have an account?{" "}
+        <Link to="/login" className="font-medium text-[var(--color-ink)] hover:underline">
+          Log in
+        </Link>
       </p>
     </div>
   );

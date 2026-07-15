@@ -1,63 +1,75 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { Mail, ArrowLeft, MailCheck } from 'lucide-react';
-import Input from '../../components/ui/Input';
-import Button from '../../components/ui/Button';
-import { forgotPassword } from '../../redux/features/auth/authThunk';
-import { useToast } from '../../components/ui/Toast';
+import { useForm } from "react-hook-form";
+import { Link, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { Send } from "lucide-react";
+import toast from "react-hot-toast";
+import { forgotPassword, clearAuthError } from "@/features/auth/authSlice";
+import Button from "@/components/common/Button";
+import { FormField, Input } from "@/components/common/Field";
 
 export default function ForgotPassword() {
-  const [email, setEmail] = useState('');
-  const [error, setError] = useState('');
-  const [sent, setSent] = useState(false);
   const dispatch = useDispatch();
-  const { toast } = useToast();
-  const { loading } = useSelector((state) => state.auth);
+  const navigate = useNavigate();
+  const status = useSelector((s) => s.auth.status);
+  const {
+    register,
+    handleSubmit,
+    getValues,
+    formState: { errors },
+  } = useForm();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!email) { setError('Email is required'); return; }
-    setError('');
-    const result = await dispatch(forgotPassword({ email }));
+  const onSubmit = async (values) => {
+    dispatch(clearAuthError());
+    const result = await dispatch(forgotPassword(values));
     if (forgotPassword.fulfilled.match(result)) {
-      setSent(true);
-      toast(result.payload?.message || 'Reset link sent', 'success');
+      toast.success("OTP sent to your email");
+      navigate("/reset-password", { state: { email: values.email } });
     } else {
-      toast(result.payload?.message || 'Could not send reset link', 'error');
+      toast.error(result.payload || "Couldn't send OTP");
     }
   };
 
-  if (sent) {
-    return (
-      <div className="text-center">
-        <div className="w-12 h-12 rounded-full bg-success-50 flex items-center justify-center mx-auto mb-4">
-          <MailCheck className="w-5 h-5 text-success-500" />
-        </div>
-        <h2 className="font-display text-xl font-semibold text-ink mb-1">Check your email</h2>
-        <p className="text-sm text-slate mb-6">We've sent a password reset link to <span className="font-medium text-ink">{email}</span></p>
-        <Link to="/login" className="text-sm font-medium text-primary-500 hover:text-primary-600 inline-flex items-center gap-1">
-          <ArrowLeft className="w-4 h-4" /> Back to login
-        </Link>
-      </div>
-    );
-  }
-
   return (
     <div>
-      <Link to="/login" className="text-sm text-slate hover:text-ink inline-flex items-center gap-1 mb-6">
-        <ArrowLeft className="w-4 h-4" /> Back
-      </Link>
-      <h2 className="font-display text-2xl font-semibold text-ink mb-1">Forgot password?</h2>
-      <p className="text-sm text-slate mb-8">Enter your email and we'll send you a reset link.</p>
+      <p className="font-[var(--font-mono)] text-xs uppercase tracking-[0.25em] text-[var(--color-amber-ink)] dark:text-[var(--color-amber)]">
+        Reset access
+      </p>
+      <h1 className="mt-2 font-[var(--font-display)] text-2xl font-bold text-[var(--color-ink)]">
+        Forgot your password?
+      </h1>
+      <p className="mt-1.5 text-sm text-[var(--color-ink-soft)]">
+        We'll email you a one-time code to reset it.
+      </p>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <Input
-          label="Email address" type="email" icon={Mail} placeholder="you@organization.com" required
-          value={email} onChange={(e) => setEmail(e.target.value)} error={error}
-        />
-        <Button type="submit" fullWidth loading={loading}>Send reset link</Button>
+      <form onSubmit={handleSubmit(onSubmit)} className="mt-7 space-y-4">
+        <FormField label="Email" htmlFor="email" required error={errors.email?.message}>
+          <Input
+            id="email"
+            type="email"
+            defaultValue={getValues("email")}
+            placeholder="you@organization.com"
+            autoComplete="email"
+            error={!!errors.email}
+            {...register("email", { required: "Email is required" })}
+          />
+        </FormField>
+
+        <Button type="submit" className="w-full" icon={Send} loading={status === "loading"}>
+          Send OTP
+        </Button>
       </form>
+
+      <p className="mt-6 text-center text-sm text-[var(--color-ink-soft)]">
+        Already have a code?{" "}
+        <Link to="/reset-password" className="font-medium text-[var(--color-ink)] hover:underline">
+          Reset password
+        </Link>
+      </p>
+      <p className="mt-2 text-center text-sm text-[var(--color-ink-soft)]">
+        <Link to="/login" className="font-medium text-[var(--color-ink)] hover:underline">
+          Back to login
+        </Link>
+      </p>
     </div>
   );
 }

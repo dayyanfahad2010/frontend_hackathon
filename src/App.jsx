@@ -1,73 +1,116 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { ToastProvider } from './components/ui/Toast';
+import { useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "react-hot-toast";
+import { useAppDispatch, useAppSelector } from "@/app/hooks";
+import { fetchProfile } from "@/features/auth/authSlice";
 
-import AuthLayout from './components/layout/AuthLayout';
-import Layout from './components/layout/Layout';
-import ProtectedRoute from './route/ProtectedRoute';
+import AuthLayout from "@/components/layout/AuthLayout";
+import DashboardLayout from "@/components/layout/DashboardLayout";
+import { ProtectedRoute, RoleRoute, PublicOnlyRoute } from "@/components/layout/RouteGuards";
 
-import Home from './pages/Home';
-import NotFound from './pages/NotFound';
-import DetailPage from './pages/DetailPage';
+import Landing from "@/pages/misc/Landing";
+import NotFound from "@/pages/misc/NotFound";
+import Login from "@/pages/auth/Login";
+import Signup from "@/pages/auth/Signup";
+import ForgotPassword from "@/pages/auth/ForgotPassword";
+import ResetPassword from "@/pages/auth/ResetPassword";
+import Dashboard from "@/pages/dashboard/Dashboard";
+import AssetList from "@/pages/assets/AssetList";
+import AssetDetail from "@/pages/assets/AssetDetail";
+import IssueList from "@/pages/issues/IssueList";
+import IssueDetail from "@/pages/issues/IssueDetail";
+import PublicAsset from "@/pages/public/PublicAsset";
 
-import Login from './pages/auth/Login';
-import SignUp from './pages/auth/SignUp';
-import ForgotPassword from './pages/auth/ForgotPassword';
-import ResetPassword from './pages/auth/ResetPassword';
+function ThemeEffect() {
+  const theme = useAppSelector((s) => s.ui.theme);
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+  }, [theme]);
+  return null;
+}
 
-import PublicAssetPage from './pages/public/PublicAssetPage';
-
-import Dashboard from './pages/admin/Dashboard';
-import AssetsList from './pages/admin/AssetsList';
-import IssuesList from './pages/admin/IssuesList';
-import IssueDetail from './pages/admin/IssueDetail';
-import AdminHistory from './pages/admin/History';
-import AdminSettings from './pages/admin/Settings';
-
-import TechnicianDashboard from './pages/technician/TechnicianDashboard';
-import TechnicianHistory from './pages/technician/History';
+function AuthBootstrap() {
+  const dispatch = useAppDispatch();
+  useEffect(() => {
+    dispatch(fetchProfile());
+  }, [dispatch]);
+  return null;
+}
 
 export default function App() {
   return (
-    <ToastProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* Public */}
-          <Route path="/" element={<Home />} />
-          <Route path="/asset/:code" element={<PublicAssetPage />} />
+    <BrowserRouter>
+      <ThemeEffect />
+      <AuthBootstrap />
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          style: {
+            background: "var(--color-surface)",
+            color: "var(--color-ink)",
+            border: "1px solid var(--color-line)",
+            fontSize: "13px",
+          },
+        }}
+      />
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/scan/:assetCode" element={<PublicAsset />} />
 
-          {/* Auth */}
+        <Route element={<PublicOnlyRoute />}>
           <Route element={<AuthLayout />}>
             <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<SignUp />} />
+            <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
           </Route>
+        </Route>
 
-          {/* Admin (protected) */}
-          <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
-            <Route element={<Layout role="admin" />}>
-              <Route path="/admin" element={<Dashboard />} />
-              <Route path="/admin/assets" element={<AssetsList />} />
-              <Route path="/admin/assets/:code" element={<DetailPage />} />
-              <Route path="/admin/issues" element={<IssuesList />} />
-              <Route path="/admin/issues/:id" element={<IssueDetail />} />
-              <Route path="/admin/history" element={<AdminHistory />} />
-              <Route path="/admin/settings" element={<AdminSettings />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/app" element={<DashboardLayout />}>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route
+              path="dashboard"
+              element={<Dashboard />}
+              handle={{ title: "Dashboard" }}
+            />
+            <Route
+              path="assets"
+              element={<AssetList />}
+              handle={{ title: "Assets" }}
+            />
+            <Route
+              path="assets/:id"
+              element={<AssetDetail />}
+              handle={{ title: "Asset details" }}
+            />
+
+            <Route element={<RoleRoute roles={["admin"]} />}>
+              <Route
+                path="issues"
+                element={<IssueList />}
+                handle={{ title: "Issues" }}
+              />
             </Route>
-          </Route>
 
-          {/* Technician (protected) */}
-          <Route element={<ProtectedRoute allowedRoles={['technician']} />}>
-            <Route element={<Layout role="technician" />}>
-              <Route path="/technician" element={<TechnicianDashboard />} />
-              <Route path="/technician/issues/:id" element={<IssueDetail />} />
-              <Route path="/technician/history" element={<TechnicianHistory />} />
+            <Route element={<RoleRoute roles={["technician"]} />}>
+              <Route
+                path="my-issues"
+                element={<IssueList mine />}
+                handle={{ title: "My issues" }}
+              />
             </Route>
-          </Route>
 
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </ToastProvider>
+            <Route
+              path="issues/:id"
+              element={<IssueDetail />}
+              handle={{ title: "Issue details" }}
+            />
+          </Route>
+        </Route>
+
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
   );
 }

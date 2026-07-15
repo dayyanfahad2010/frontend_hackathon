@@ -1,81 +1,119 @@
-import { useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { Lock, ArrowLeft, CheckCircle2 } from 'lucide-react';
-import Input from '../../components/ui/Input';
-import Button from '../../components/ui/Button';
-import { resetPassword } from '../../redux/features/auth/authThunk';
-import { useToast } from '../../components/ui/Toast';
+import { useForm } from "react-hook-form";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { KeyRound } from "lucide-react";
+import toast from "react-hot-toast";
+import { resetPassword, clearAuthError } from "@/features/auth/authSlice";
+import Button from "@/components/common/Button";
+import { FormField, Input } from "@/components/common/Field";
 
 export default function ResetPassword() {
-  const [searchParams] = useSearchParams();
-  const token = searchParams.get('token') || '';
-  const [form, setForm] = useState({ password: '', confirmPassword: '' });
-  const [errors, setErrors] = useState({});
-  const [done, setDone] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { loading } = useSelector((state) => state.auth);
+  const location = useLocation();
+  const status = useSelector((s) => s.auth.status);
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm({
+    defaultValues: { email: location.state?.email || "" },
+  });
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
-
-  const validate = () => {
-    const err = {};
-    if (!form.password || form.password.length < 6) err.password = 'Minimum 6 characters';
-    if (form.confirmPassword !== form.password) err.confirmPassword = 'Passwords do not match';
-    if (!token) err.token = 'Reset token is missing or invalid';
-    setErrors(err);
-    return Object.keys(err).length === 0;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validate()) return;
-    const result = await dispatch(resetPassword({ token, password: form.password }));
+  const onSubmit = async (values) => {
+    dispatch(clearAuthError());
+    const { confirmPassword, ...payload } = values;
+    const result = await dispatch(resetPassword(payload));
     if (resetPassword.fulfilled.match(result)) {
-      setDone(true);
-      toast(result.payload?.message || 'Password reset successfully', 'success');
+      toast.success("Password reset — log in with your new password");
+      navigate("/login");
     } else {
-      toast(result.payload?.message || 'Could not reset password', 'error');
+      toast.error(result.payload || "Reset failed");
     }
   };
 
-  if (done) {
-    return (
-      <div className="text-center">
-        <div className="w-12 h-12 rounded-full bg-success-50 flex items-center justify-center mx-auto mb-4">
-          <CheckCircle2 className="w-5 h-5 text-success-500" />
-        </div>
-        <h2 className="font-display text-xl font-semibold text-ink mb-1">Password updated</h2>
-        <p className="text-sm text-slate mb-6">You can now log in with your new password.</p>
-        <Button fullWidth onClick={() => navigate('/login')}>Go to login</Button>
-      </div>
-    );
-  }
-
   return (
     <div>
-      <Link to="/login" className="text-sm text-slate hover:text-ink inline-flex items-center gap-1 mb-6">
-        <ArrowLeft className="w-4 h-4" /> Back
-      </Link>
-      <h2 className="font-display text-2xl font-semibold text-ink mb-1">Reset password</h2>
-      <p className="text-sm text-slate mb-8">Choose a new password for your account.</p>
+      <p className="font-[var(--font-mono)] text-xs uppercase tracking-[0.25em] text-[var(--color-amber-ink)] dark:text-[var(--color-amber)]">
+        Reset access
+      </p>
+      <h1 className="mt-2 font-[var(--font-display)] text-2xl font-bold text-[var(--color-ink)]">
+        Enter your OTP
+      </h1>
+      <p className="mt-1.5 text-sm text-[var(--color-ink-soft)]">
+        Check your inbox for the 6-digit code we just sent.
+      </p>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <Input
-          label="New password" name="password" type="password" icon={Lock}
-          placeholder="At least 6 characters" required
-          value={form.password} onChange={handleChange} error={errors.password}
-        />
-        <Input
-          label="Confirm new password" name="confirmPassword" type="password" icon={Lock}
-          placeholder="Re-enter password" required
-          value={form.confirmPassword} onChange={handleChange} error={errors.confirmPassword}
-        />
-        {errors.token && <p className="text-xs text-danger-500">{errors.token}</p>}
-        <Button type="submit" fullWidth loading={loading}>Reset password</Button>
+      <form onSubmit={handleSubmit(onSubmit)} className="mt-7 space-y-4">
+        <FormField label="Email" htmlFor="email" required error={errors.email?.message}>
+          <Input
+            id="email"
+            type="email"
+            autoComplete="email"
+            error={!!errors.email}
+            {...register("email", { required: "Email is required" })}
+          />
+        </FormField>
+
+        <FormField label="OTP code" htmlFor="otp" required error={errors.otp?.message}>
+          <Input
+            id="otp"
+            inputMode="numeric"
+            maxLength={6}
+            placeholder="123456"
+            error={!!errors.otp}
+            {...register("otp", { required: "OTP is required" })}
+          />
+        </FormField>
+
+        <FormField
+          label="New password"
+          htmlFor="password"
+          required
+          error={errors.password?.message}
+          hint="At least 8 characters."
+        >
+          <Input
+            id="password"
+            type="password"
+            autoComplete="new-password"
+            error={!!errors.password}
+            {...register("password", {
+              required: "Password is required",
+              minLength: { value: 8, message: "Must be at least 8 characters" },
+            })}
+          />
+        </FormField>
+
+        <FormField
+          label="Confirm new password"
+          htmlFor="confirmPassword"
+          required
+          error={errors.confirmPassword?.message}
+        >
+          <Input
+            id="confirmPassword"
+            type="password"
+            autoComplete="new-password"
+            error={!!errors.confirmPassword}
+            {...register("confirmPassword", {
+              required: "Please confirm your password",
+              validate: (v) => v === watch("password") || "Passwords do not match",
+            })}
+          />
+        </FormField>
+
+        <Button type="submit" className="w-full" icon={KeyRound} loading={status === "loading"}>
+          Reset password
+        </Button>
       </form>
+
+      <p className="mt-6 text-center text-sm text-[var(--color-ink-soft)]">
+        <Link to="/login" className="font-medium text-[var(--color-ink)] hover:underline">
+          Back to login
+        </Link>
+      </p>
     </div>
   );
 }

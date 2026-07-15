@@ -1,77 +1,88 @@
-import { useState } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { Mail, Lock } from 'lucide-react';
-import Input from '../../components/ui/Input';
-import Button from '../../components/ui/Button';
-import { login } from '../../redux/features/auth/authThunk';
-import { clearAuthState } from '../../redux/features/auth/authSlice';
-import { useToast } from '../../components/ui/Toast';
+import { useForm } from "react-hook-form";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { LogIn } from "lucide-react";
+import toast from "react-hot-toast";
+import { login, clearAuthError } from "@/features/auth/authSlice";
+import Button from "@/components/common/Button";
+import { FormField, Input } from "@/components/common/Field";
 
 export default function Login() {
-  const [form, setForm] = useState({ email: '', password: '' });
-  const [errors, setErrors] = useState({});
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const { toast } = useToast();
-  const { loading } = useSelector((state) => state.auth);
+  const status = useSelector((s) => s.auth.status);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
-
-  const validate = () => {
-    const err = {};
-    if (!form.email) err.email = 'Email is required';
-    if (!form.password) err.password = 'Password is required';
-    setErrors(err);
-    return Object.keys(err).length === 0;
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validate()) return;
-    dispatch(clearAuthState());
-    const result = await dispatch(login(form));
+  const onSubmit = async (values) => {
+    dispatch(clearAuthError());
+    const result = await dispatch(login(values));
     if (login.fulfilled.match(result)) {
-      toast(result.payload?.message || 'Logged in successfully', 'success');
-      const role = result.payload?.data?.role;
-      const redirectTo = location.state?.from?.pathname;
-      if (redirectTo) navigate(redirectTo);
-      else if (role === 'technician') navigate('/technician');
-      else navigate('/admin');
+      toast.success("Welcome back");
+      navigate(location.state?.from?.pathname || "/app/dashboard", { replace: true });
     } else {
-      toast(result.payload?.message || 'Login failed. Please try again.', 'error');
+      toast.error(result.payload || "Login failed");
     }
   };
 
   return (
     <div>
-      <h2 className="font-display text-2xl font-semibold text-ink mb-1">Welcome back</h2>
-      <p className="text-sm text-slate mb-8">Log in to manage assets, issues and maintenance.</p>
+      <p className="font-[var(--font-mono)] text-xs uppercase tracking-[0.25em] text-[var(--color-amber-ink)] dark:text-[var(--color-amber)]">
+        Welcome back
+      </p>
+      <h1 className="mt-2 font-[var(--font-display)] text-2xl font-bold text-[var(--color-ink)]">
+        Log in to your workspace
+      </h1>
+      <p className="mt-1.5 text-sm text-[var(--color-ink-soft)]">
+        Access your assigned assets, issues, and maintenance records.
+      </p>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <Input
-          label="Email address" name="email" type="email" icon={Mail}
-          placeholder="you@organization.com" required
-          value={form.email} onChange={handleChange} error={errors.email}
-        />
-        <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <label className="block text-sm font-medium text-ink">Password <span className="text-danger-500">*</span></label>
-            <Link to="/forgot-password" className="text-xs font-medium text-primary-500 hover:text-primary-600">Forgot password?</Link>
-          </div>
+      <form onSubmit={handleSubmit(onSubmit)} className="mt-7 space-y-4">
+        <FormField label="Email" htmlFor="email" required error={errors.email?.message}>
           <Input
-            name="password" type="password" icon={Lock}
-            placeholder="Enter your password"
-            value={form.password} onChange={handleChange} error={errors.password}
+            id="email"
+            type="email"
+            placeholder="you@organization.com"
+            autoComplete="email"
+            error={!!errors.email}
+            {...register("email", { required: "Email is required" })}
           />
+        </FormField>
+
+        <FormField label="Password" htmlFor="password" required error={errors.password?.message}>
+          <Input
+            id="password"
+            type="password"
+            placeholder="••••••••"
+            autoComplete="current-password"
+            error={!!errors.password}
+            {...register("password", { required: "Password is required" })}
+          />
+        </FormField>
+
+        <div className="flex justify-end">
+          <Link
+            to="/forgot-password"
+            className="text-xs font-medium text-[var(--color-amber-ink)] dark:text-[var(--color-amber)] hover:underline"
+          >
+            Forgot password?
+          </Link>
         </div>
 
-        <Button type="submit" fullWidth loading={loading}>Log in</Button>
+        <Button type="submit" className="w-full" icon={LogIn} loading={status === "loading"}>
+          Log in
+        </Button>
       </form>
 
-      <p className="text-sm text-slate text-center mt-6">
-        Don't have an account? <Link to="/signup" className="font-medium text-primary-500 hover:text-primary-600">Sign up</Link>
+      <p className="mt-6 text-center text-sm text-[var(--color-ink-soft)]">
+        New to MaintainIQ?{" "}
+        <Link to="/signup" className="font-medium text-[var(--color-ink)] hover:underline">
+          Create an account
+        </Link>
       </p>
     </div>
   );
